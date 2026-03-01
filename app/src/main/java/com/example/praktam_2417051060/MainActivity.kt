@@ -4,47 +4,36 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.praktam_2417051060.model.MoodSource
 import com.example.praktam_2417051060.ui.theme.PrakTAM_2417051060Theme
-
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         setContent {
             PrakTAM_2417051060Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Ni Kadek Wahyu Fortuna",
-                        npm = "2417051060",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                Greeting()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, npm: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello, saya $name dengan NPM $npm siap belajar compose!",
-        modifier = modifier
-    )
-}
+fun Greeting() {
+    val mood = MoodSource.dummyMood[0]  // ambil 1 data dari index ke-0
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PrakTAM_2417051060Theme {
-        Greeting("Ni Kadek Wahyu Fortuna", "2417051060")
+    Column(modifier = Modifier. fillMaxSize().padding(24.dp)) {
+        Text(text = "Mood: ${mood.mood}")
+        Text(text = "Deskripsi: ${mood.deskripsi}")
+        Text(text = "Artist: ${mood.artist}")
+        Text(text = "Playlist: ${mood.playlist}")
     }
 }
+
