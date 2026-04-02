@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,10 +39,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.praktam_2417051060.model.MoodMusic
@@ -64,7 +64,8 @@ fun DaftarMoodScreen() {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding(),
+            .statusBarsPadding()
+            .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
@@ -72,8 +73,8 @@ fun DaftarMoodScreen() {
         item {
             Text(
                 text = "Mood Music 🎧",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary
             )
 
             Text(
@@ -86,8 +87,7 @@ fun DaftarMoodScreen() {
         item {
             Text(
                 text = "Mood Hari Ini",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -104,8 +104,7 @@ fun DaftarMoodScreen() {
         item {
             Text(
                 text = "Playlist Untuk Kamu 🎶",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium
             )
 
             Text(
@@ -125,7 +124,10 @@ fun MoodRowItem(mood: MoodMusic) {
     Card(
         modifier = Modifier.width(150.dp),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column {
             Image(
@@ -140,12 +142,11 @@ fun MoodRowItem(mood: MoodMusic) {
             Column(modifier = Modifier.padding(8.dp)) {
                 Text(
                     text = mood.mood,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleSmall
                 )
                 Text(
                     text = mood.judul,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
@@ -192,7 +193,10 @@ fun DetailMoodScreen(mood: MoodMusic) {
                         else
                             Icons.Outlined.FavoriteBorder,
                         contentDescription = "Favorite",
-                        tint = if (isFavorite) Color.Red else Color.Black
+                        tint = if (isFavorite)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -201,8 +205,7 @@ fun DetailMoodScreen(mood: MoodMusic) {
 
             Text(
                 text = mood.mood,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium
             )
 
             Text(
@@ -212,17 +215,35 @@ fun DetailMoodScreen(mood: MoodMusic) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text("Playlist: ${mood.playlist}")
-            Text("Artist: ${mood.artist}")
-            Text("Judul: ${mood.judul}")
+            Text(
+                text = "Playlist: ${mood.playlist}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Artist: ${mood.artist}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Judul: ${mood.judul}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Button(
                 onClick = { isPlaying = !isPlaying },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
-                Text(if (isPlaying) "Sedang Diputar" else "Putar Sekarang")
+                Text(
+                    text = if (isPlaying) "Sedang Diputar" else "Putar Sekarang",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }
