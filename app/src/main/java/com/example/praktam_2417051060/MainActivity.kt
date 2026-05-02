@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +36,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,8 +44,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -53,8 +55,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.example.praktam_2417051060.model.MoodMusic
-import com.example.praktam_2417051060.model.MoodSource
+import com.example.praktam_2417051060.network.RetrofitClient
 import com.example.praktam_2417051060.ui.theme.PrakTAM_2417051060Theme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -74,25 +77,26 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
+    var moods by remember { mutableStateOf<List<MoodMusic>>(emptyList()) }
+
     NavHost(
         navController = navController,
         startDestination = "home"
     ) {
 
         composable("home") {
-            DaftarMoodScreen(navController)
+            DaftarMoodScreen(navController) { fetchedMoods ->
+                moods = fetchedMoods
+            }
         }
 
         composable("detail/{mood}") { backStackEntry ->
             val moodName = backStackEntry.arguments?.getString("mood")
+            val mood = moods.find { it.mood == moodName }
 
-            val mood = MoodSource.dummyMood.find {
-                it.mood == moodName
-            }
-
-            if (mood != null) {
+            mood?.let {
                 DetailMoodScreen(
-                    mood = mood,
+                    mood = it,
                     navController = navController,
                     isFullScreen = true
                 )
@@ -102,7 +106,67 @@ fun AppNavigation(navController: NavHostController) {
 }
 
 @Composable
-fun DaftarMoodScreen(navController: NavController) {
+fun DaftarMoodScreen(
+    navController: NavController,
+    onLoaded: (List<MoodMusic>) -> Unit = {}
+) {
+
+    var moods by remember { mutableStateOf<List<MoodMusic>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var isError by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        try {
+            moods = RetrofitClient.instance.getMoods()
+            onLoaded(moods)
+            isLoading = false
+            isError = false
+        } catch (_: Exception) {
+            isLoading = false
+            isError = true
+        }
+    }
+
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    if (isError || moods.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                Text(
+                    text = "Gagal Memuat Data",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Red
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Pastikan koneksi internet Anda menyala",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        return
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -125,7 +189,6 @@ fun DaftarMoodScreen(navController: NavController) {
             )
         }
 
-
         item {
             Text(
                 text = "Mood Hari Ini",
@@ -137,7 +200,7 @@ fun DaftarMoodScreen(navController: NavController) {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(MoodSource.dummyMood) { mood ->
+                items(moods) { mood ->
                     MoodRowItem(mood, navController)
                 }
             }
@@ -155,7 +218,7 @@ fun DaftarMoodScreen(navController: NavController) {
             )
         }
 
-        items(MoodSource.dummyMood) { mood ->
+        items(moods) { mood ->
             MoodItem(mood, navController)
         }
     }
@@ -163,6 +226,10 @@ fun DaftarMoodScreen(navController: NavController) {
 
 @Composable
 fun MoodRowItem(mood: MoodMusic, navController: NavController) {
+//    val context = LocalContext.current
+//    val resId = MoodSource.getResourceId(context, mood.imageName)
+//    val imageRes = if (resId != 0) resId else R.drawable.fokus
+
     Card(
         modifier = Modifier
             .width(150.dp)
@@ -176,9 +243,12 @@ fun MoodRowItem(mood: MoodMusic, navController: NavController) {
         )
     ) {
         Column {
-            Image(
-                painter = painterResource(id = mood.imageRes),
+
+            AsyncImage(
+                model = mood.imageUrl,
                 contentDescription = mood.mood,
+                placeholder = painterResource(id = R.drawable.fokus),
+                error = painterResource(id = R.drawable.sedih),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp),
@@ -202,6 +272,11 @@ fun MoodRowItem(mood: MoodMusic, navController: NavController) {
 
 @Composable
 fun MoodItem(mood: MoodMusic, navController: NavController) {
+      var isFavorite by remember { mutableStateOf(false) }
+//    val context = LocalContext.current
+//    val resId = MoodSource.getResourceId(context, mood.imageName)
+//    val imageRes = if (resId != 0) resId else R.drawable.fokus
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -215,15 +290,35 @@ fun MoodItem(mood: MoodMusic, navController: NavController) {
         )
     ) {
         Column {
-
-            Image(
-                painter = painterResource(id = mood.imageRes),
+            Box{
+                AsyncImage(
+                model = mood.imageUrl,
                 contentDescription = mood.mood,
+                placeholder = painterResource(id = R.drawable.fokus),
+                error = painterResource(id = R.drawable.sedih),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp),
                 contentScale = ContentScale.Crop
-            )
+                )
+
+                IconButton(
+                onClick = { isFavorite = !isFavorite },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                ) {
+                    Icon(
+                    imageVector =
+                        if (isFavorite) Icons.Filled.Favorite
+                        else Icons.Outlined.FavoriteBorder,
+                    contentDescription = "Favorite",
+                    tint =
+                        if (isFavorite) Color.Red
+                        else Color.Black
+                    )
+                }
+            }
 
             Column(modifier = Modifier.padding(12.dp)) {
 
@@ -245,6 +340,17 @@ fun MoodItem(mood: MoodMusic, navController: NavController) {
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        navController.navigate("detail/${mood.mood}")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Putar Sekarang")
+                }
             }
         }
     }
@@ -255,7 +361,6 @@ fun DetailMoodScreen(
     navController: NavController,
     isFullScreen: Boolean = false
 ) {
-
     var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -280,9 +385,11 @@ fun DetailMoodScreen(
 
                 Box {
 
-                    Image(
-                        painter = painterResource(id = mood.imageRes),
+                    AsyncImage(
+                        model = mood.imageUrl,
                         contentDescription = mood.mood,
+                        placeholder = painterResource(id = R.drawable.fokus),
+                        error = painterResource(id = R.drawable.sedih),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(200.dp),
