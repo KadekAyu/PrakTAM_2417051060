@@ -50,15 +50,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.praktam_2417051060.model.MoodMusic
-import com.example.praktam_2417051060.network.RetrofitClient
+import data.model.MoodMusic
 import com.example.praktam_2417051060.ui.theme.PrakTAM_2417051060Theme
+import data.repository.MoodRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -115,16 +116,19 @@ fun DaftarMoodScreen(
     var isLoading by remember { mutableStateOf(true) }
     var isError by remember { mutableStateOf(false) }
 
+    val repository = remember { MoodRepository() }
+
     LaunchedEffect(Unit) {
-        try {
-            moods = RetrofitClient.instance.getMoods()
-            onLoaded(moods)
-            isLoading = false
-            isError = false
-        } catch (_: Exception) {
-            isLoading = false
-            isError = true
-        }
+
+        isLoading = true
+
+        moods = repository.getMoods()
+
+        onLoaded(moods)
+
+        isLoading = false
+
+        isError = moods.isEmpty()
     }
 
     if (isLoading) {
@@ -159,7 +163,7 @@ fun DaftarMoodScreen(
                     text = "Pastikan koneksi internet Anda menyala",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -226,9 +230,6 @@ fun DaftarMoodScreen(
 
 @Composable
 fun MoodRowItem(mood: MoodMusic, navController: NavController) {
-//    val context = LocalContext.current
-//    val resId = MoodSource.getResourceId(context, mood.imageName)
-//    val imageRes = if (resId != 0) resId else R.drawable.fokus
 
     Card(
         modifier = Modifier
@@ -273,9 +274,6 @@ fun MoodRowItem(mood: MoodMusic, navController: NavController) {
 @Composable
 fun MoodItem(mood: MoodMusic, navController: NavController) {
       var isFavorite by remember { mutableStateOf(false) }
-//    val context = LocalContext.current
-//    val resId = MoodSource.getResourceId(context, mood.imageName)
-//    val imageRes = if (resId != 0) resId else R.drawable.fokus
 
     Card(
         modifier = Modifier

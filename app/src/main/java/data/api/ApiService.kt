@@ -1,9 +1,10 @@
-package com.example.praktam_2417051060.network
+package data.api
 
-import com.example.praktam_2417051060.model.MoodMusic
+import data.model.MoodMusic
 import retrofit2.http.GET
 
 interface ApiService {
+
     @GET("mood_music.json")
     suspend fun getMoods(): List<MoodMusic>
 }

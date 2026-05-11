@@ -1,5 +1,7 @@
-package com.example.praktam_2417051060.model
+package data.model
+
 import com.google.gson.annotations.SerializedName
+
 data class MoodMusic(
     @SerializedName("mood")
     val mood: String,
@@ -18,5 +20,4 @@ data class MoodMusic(
 
     @SerializedName("image_url")
     val imageUrl: String
-) {
-}
+)
